@@ -1,0 +1,181 @@
+{
+  "version": "1.2.0",
+  "id": "sunny",
+  "name": "小阳 (活力少年 · 短裤)",
+  "outfitMode": "pants",
+  "hasGlasses": false,
+  "canvasSize": {
+    "width": 896,
+    "height": 1200
+  },
+  "characterBounds": {
+    "x": 264,
+    "y": 64,
+    "width": 367,
+    "height": 1095
+  },
+  "layers": {
+    "head": {
+      "texture": "head.png",
+      "x": 285,
+      "y": 48,
+      "width": 322,
+      "height": 288,
+      "meshCols": 16,
+      "meshRows": 16
+    },
+    "body": {
+      "texture": "body.png",
+      "x": 248,
+      "y": 265,
+      "width": 400,
+      "height": 911,
+      "meshCols": 12,
+      "meshRows": 20
+    },
+    "torso": {
+      "texture": "torso.png",
+      "x": 320,
+      "y": 273,
+      "width": 257,
+      "height": 496,
+      "meshCols": 12,
+      "meshRows": 16
+    },
+    "leftArm": {
+      "texture": "left_arm.png",
+      "x": 256,
+      "y": 388,
+      "width": 115,
+      "height": 386,
+      "meshCols": 10,
+      "meshRows": 22
+    },
+    "rightArm": {
+      "texture": "right_arm.png",
+      "x": 525,
+      "y": 388,
+      "width": 115,
+      "height": 386,
+      "meshCols": 10,
+      "meshRows": 22
+    },
+    "leftLeg": {
+      "texture": "left_leg.png",
+      "x": 299,
+      "y": 682,
+      "width": 146,
+      "height": 486,
+      "meshCols": 10,
+      "meshRows": 22
+    },
+    "rightLeg": {
+      "texture": "right_leg.png",
+      "x": 452,
+      "y": 682,
+      "width": 145,
+      "height": 486,
+      "meshCols": 10,
+      "meshRows": 22
+    }
+  },
+  "patches": {
+    "eyes_closed": "patches/eyes_closed.png",
+    "eyes_happy": "patches/eyes_happy.png",
+    "mouth_laugh": "patches/mouth_laugh.png",
+    "mouth_smile": "patches/mouth_smile.png",
+    "mouth_a": "patches/mouth_a.png",
+    "mouth_e": "patches/mouth_e.png",
+    "mouth_o": "patches/mouth_o.png"
+  },
+  "landmarks": {
+    "headCenter": [
+      447.5,
+      203.5
+    ],
+    "leftEye": [
+      405.0,
+      216.5
+    ],
+    "rightEye": [
+      490.0,
+      216.5
+    ],
+    "nose": [
+      447.5,
+      246.1
+    ],
+    "mouth": [
+      447.5,
+      279.8
+    ],
+    "neckPivot": [
+      447.5,
+      317.0
+    ],
+    "chest": [
+      447.5,
+      458.2
+    ],
+    "hips": [
+      447.5,
+      688.1
+    ],
+    "knees": [
+      447.5,
+      907.1
+    ],
+    "feetGround": [
+      447.5,
+      1153.0
+    ],
+    "leftShoulder": [
+      341.0,
+      417.0
+    ],
+    "leftElbow": [
+      326.0,
+      523.0
+    ],
+    "leftWrist": [
+      306.0,
+      657.0
+    ],
+    "rightShoulder": [
+      554.0,
+      417.0
+    ],
+    "rightElbow": [
+      569.0,
+      523.0
+    ],
+    "rightWrist": [
+      589.0,
+      657.0
+    ],
+    "leftHip": [
+      394.0,
+      715.0
+    ],
+    "leftKnee": [
+      393.0,
+      900.0
+    ],
+    "leftAnkle": [
+      383.0,
+      1050.0
+    ],
+    "rightHip": [
+      501.0,
+      715.0
+    ],
+    "rightKnee": [
+      502.0,
+      900.0
+    ],
+    "rightAnkle": [
+      512.0,
+      1050.0
+    ]
+  }
+}

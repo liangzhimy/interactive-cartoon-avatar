@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interactive Cartoon Avatar Studio — 通用 2.5D 卡通角色导入与骨骼绑定工坊</title>
+    <meta
+      name="description"
+      content="将任意单张站立/A-Pose卡通人物立绘（男人、女人、教师、不同职业）自动拆解为6层骨骼网格角色，支持眨眼、微笑、大笑、说话对口型、挥手、走路、踢腿与跳跃。"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="app" class="studio-shell">
+      <header class="studio-header">
+        <div class="brand-group">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div>
+            <h1 class="brand-title">Cartoon Avatar Studio</h1>
+            <p class="brand-subtitle">通用单图换人向导 · 6 层胶囊骨骼分割 · 60fps 网页可编程交互角色</p>
+          </div>
+        </div>
+
+        <div class="header-controls">
+          <label class="select-wrap" for="avatar-select">
+            <span class="select-label">切换角色</span>
+            <select id="avatar-select" aria-label="选择卡通角色">
+              <option value="/avatars/sunny/manifest.json">小阳 (活力少年 · 短裤)</option>
+              <option value="/avatars/male_teacher/manifest.json">陈老师 (男教师 · 裤装)</option>
+              <option value="/avatars/female_teacher/manifest.json">林老师 (女教师 · 裙装)</option>
+            </select>
+          </label>
+
+          <button id="btn-open-rigging-wizard" type="button" class="btn btn-primary">
+            + 导入新角色 / 换人工坊
+          </button>
+
+          <button id="btn-header-export" type="button" class="btn btn-secondary">
+            导出角色包 (.zip)
+          </button>
+
+          <button id="btn-compare-source" type="button" class="btn btn-ghost">
+            对比单张原图
+          </button>
+        </div>
+      </header>
+
+      <main class="studio-main">
+        <!-- Left / Center Character Stage -->
+        <section class="stage-panel" aria-label="卡通角色交互舞台">
+          <div class="stage-toolbar">
+            <label class="toggle-chip" for="toggle-mouse-follow">
+              <input id="toggle-mouse-follow" type="checkbox" />
+              <span>鼠标视线跟随</span>
+            </label>
+            <label class="toggle-chip" for="toggle-wireframe">
+              <input id="toggle-wireframe" type="checkbox" />
+              <span>2.5D 变形网格</span>
+            </label>
+            <label class="toggle-chip" for="toggle-calibration">
+              <input id="toggle-calibration" type="checkbox" />
+              <span>骨骼关键点校准</span>
+            </label>
+            <label id="wrap-mirror-cal" class="toggle-chip" for="toggle-mirror-cal" hidden>
+              <input id="toggle-mirror-cal" type="checkbox" checked />
+              <span>左右对称联动</span>
+            </label>
+            <button id="btn-save-landmarks" type="button" class="btn btn-tiny" hidden>
+              保存关节
+            </button>
+            <button id="btn-stage-rerig" type="button" class="btn btn-tiny btn-tiny-teal" hidden>
+              按校准重切分
+            </button>
+          </div>
+
+          <div id="avatar-stage" class="stage-canvas-host"></div>
+
+          <!-- Calibration Banner Hint -->
+          <div id="calibration-banner" class="calibration-banner" hidden>
+            <span id="calibration-readout">
+              校准模式已开启（待机呼吸已锁定）：直接拖拽舞台上的肩/肘/腕/髋/眼/嘴圆点，保存或点击「按校准重切分」重新生成图层。
+            </span>
+          </div>
+
+          <!-- Original flat image comparison overlay -->
+          <div id="source-compare-card" class="source-compare-card" hidden>
+            <div class="source-compare-header">
+              <span>输入的单张平面原图 (source.png)</span>
+              <button id="btn-close-source" type="button" class="icon-close" aria-label="关闭原图预览">
+                ×
+              </button>
+            </div>
+            <img id="source-preview-img" src="/avatars/sunny/source.png" alt="输入的单张全身卡通原图" />
+            <p class="source-compare-note">
+              由单张平面立绘自动抠图、分离头/躯干/四肢 6 图层并合成自适应肤色五官补丁
+            </p>
+          </div>
+
+          <div class="stage-hud">
+            <div class="hud-metrics">
+              <span id="hud-yaw">转头 Yaw: 0.00</span>
+              <span id="hud-pitch">俯仰 Pitch: 0.00</span>
+              <span id="hud-jump">离地 Jump: 0px</span>
+            </div>
+            <div class="hud-voice">
+              <span id="speech-status-badge" class="status-dot">待机呼吸中</span>
+              <div class="audio-meter" title="实时语音口型能量">
+                <div id="audio-meter-bar" class="audio-meter-fill"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right Interactive Control Workbench -->
+        <aside class="control-panel" aria-label="角色动作与绑定工坊控制台">
+          <nav class="panel-tabs" role="tablist">
+            <button
+              id="tab-btn-actions"
+              type="button"
+              role="tab"
+              aria-selected="true"
+              class="panel-tab active"
+              data-tab="actions"
+            >
+              动作操控
+            </button>
+            <button
+              id="tab-btn-rigging"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              class="panel-tab panel-tab-accent"
+              data-tab="rigging"
+            >
+              角色工坊 (换人)
+            </button>
+            <button
+              id="tab-btn-speech"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              class="panel-tab"
+              data-tab="speech"
+            >
+              说话对口型
+            </button>
+            <button
+              id="tab-btn-code"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              class="panel-tab"
+              data-tab="code"
+            >
+              编程 API
+            </button>
+          </nav>
+
+          <!-- Tab 1: Actions & 2.5D Head Orientation -->
+          <div id="tab-pane-actions" class="tab-pane active" role="tabpanel">
+            <div class="control-group">
+              <div class="group-header">
+                <h2>手脚四肢骨骼动作</h2>
+                <span class="hint-text">快捷键 W / E / R / K 触发四肢预设</span>
+              </div>
+              <div class="action-grid">
+                <button id="act-wave" type="button" class="action-btn action-primary">
+                  <span class="action-name">挥手打招呼</span>
+                  <kbd>W</kbd>
+                </button>
+                <button id="act-cheer" type="button" class="action-btn action-highlight">
+                  <span class="action-name">双手欢呼</span>
+                  <kbd>E</kbd>
+                </button>
+                <button id="act-walk" type="button" class="action-btn">
+                  <span class="action-name">踏步走路</span>
+                  <kbd>R</kbd>
+                </button>
+                <button id="act-kick" type="button" class="action-btn">
+                  <span class="action-name">开心踢腿</span>
+                  <kbd>K</kbd>
+                </button>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <div class="group-header">
+                <h2>表情、头部与跳跃动作</h2>
+                <span class="hint-text">支持数字键 1–7 与空格键跳跃</span>
+              </div>
+              <div class="action-grid">
+                <button id="act-blink" type="button" class="action-btn">
+                  <span class="action-name">眨眼睛</span>
+                  <kbd>1</kbd>
+                </button>
+                <button id="act-smile" type="button" class="action-btn">
+                  <span class="action-name">温柔微笑</span>
+                  <kbd>2</kbd>
+                </button>
+                <button id="act-laugh" type="button" class="action-btn action-highlight">
+                  <span class="action-name">开怀大笑</span>
+                  <kbd>3</kbd>
+                </button>
+                <button id="act-nod" type="button" class="action-btn">
+                  <span class="action-name">点头回应</span>
+                  <kbd>4</kbd>
+                </button>
+                <button id="act-shake" type="button" class="action-btn">
+                  <span class="action-name">摇头摆动</span>
+                  <kbd>5</kbd>
+                </button>
+                <button id="act-turn-left" type="button" class="action-btn">
+                  <span class="action-name">向左转头</span>
+                  <kbd>6</kbd>
+                </button>
+                <button id="act-turn-right" type="button" class="action-btn">
+                  <span class="action-name">向右转头</span>
+                  <kbd>7</kbd>
+                </button>
+                <button id="act-jump" type="button" class="action-btn action-primary">
+                  <span class="action-name">原地跳跃</span>
+                  <kbd>Space</kbd>
+                </button>
+              </div>
+
+              <div class="combo-row">
+                <button id="act-combo-joyjump" type="button" class="btn btn-outline">
+                  组合动作：边跳边大笑
+                </button>
+                <button id="act-combo-greet" type="button" class="btn btn-outline">
+                  挥手打招呼完整演出
+                </button>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <div class="group-header">
+                <h2>2.5D 自由转头与姿态精调</h2>
+                <button id="btn-reset-pose" type="button" class="link-btn">复位回正</button>
+              </div>
+
+              <div class="pose-pad-layout">
+                <div id="head-xy-pad" class="xy-pad" title="拖拽控制角色 2.5D 左右转头与上下俯仰">
+                  <div class="xy-axis-h"></div>
+                  <div class="xy-axis-v"></div>
+                  <div id="head-xy-knob" class="xy-knob"></div>
+                  <span class="xy-label-top">抬头</span>
+                  <span class="xy-label-bottom">低头</span>
+                  <span class="xy-label-left">左转</span>
+                  <span class="xy-label-right">右转</span>
+                </div>
+
+                <div class="sliders-stack">
+                  <label class="slider-row" for="slider-roll">
+                    <div class="slider-meta">
+                      <span>歪头摆动 (Roll)</span>
+                      <output id="out-roll">0.00</output>
+                    </div>
+                    <input id="slider-roll" type="range" min="-1" max="1" step="0.02" value="0" />
+                  </label>
+
+                  <label class="slider-row" for="slider-smile">
+                    <div class="slider-meta">
+                      <span>常驻微笑强度</span>
+                      <output id="out-smile">0.00</output>
+                    </div>
+                    <input id="slider-smile" type="range" min="0" max="1" step="0.02" value="0" />
+                  </label>
+
+                  <label class="slider-row" for="slider-jump-height">
+                    <div class="slider-meta">
+                      <span>跳跃高度设定</span>
+                      <output id="out-jump-height">130px</output>
+                    </div>
+                    <input
+                      id="slider-jump-height"
+                      type="range"
+                      min="60"
+                      max="200"
+                      step="5"
+                      value="130"
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 2: Universal Character Import & Skeletal Rigging Workshop -->
+          <div id="tab-pane-rigging" class="tab-pane" role="tabpanel" hidden>
+            <div class="control-group">
+              <div class="group-header">
+                <h2>单张卡通图 → 自动 6 层骨骼换人</h2>
+                <span class="badge-pill">支持男/女/教师/各职业</span>
+              </div>
+
+              <div id="rig-dropzone" class="rig-dropzone" tabindex="0" role="button" aria-label="点击或拖拽上传单张全身卡通角色图">
+                <input
+                  id="input-upload-image"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  hidden
+                />
+                <img id="rig-upload-preview" class="rig-upload-preview" alt="待导入预览" hidden />
+                <div id="rig-dropzone-empty" class="rig-dropzone-empty">
+                  <strong>点击选择或拖拽上传单张全身卡通立绘</strong>
+                  <span>支持 PNG / JPG / WebP · 透明底、白底或纯色渐变底均可自动净色抠图</span>
+                </div>
+              </div>
+
+              <div class="rig-form-grid">
+                <label class="rig-field" for="rig-char-name">
+                  <span>角色名称</span>
+                  <input
+                    id="rig-char-name"
+                    type="text"
+                    class="rig-text-input"
+                    placeholder="例如：张医生 / 王老师 / 客服小美"
+                  />
+                </label>
+
+                <label class="rig-field" for="rig-outfit-mode">
+                  <span>下装裁剪模式</span>
+                  <select id="rig-outfit-mode" class="mode-select">
+                    <option value="auto">自动识别裤装 / 裙装 (推荐)</option>
+                    <option value="pants">裤装 / 短裤 (双腿自髋部独立摆动)</option>
+                    <option value="skirt">裙装 / 长大衣 (保留完整裙摆+裙下双腿)</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="rig-import-actions">
+                <button id="btn-run-import" type="button" class="btn btn-primary btn-full">
+                  开始自动抠图与 6 层骨骼绑定
+                </button>
+                <span id="rig-import-status" class="rig-status-text">
+                  提示：顶部下拉框已内置「小阳」「陈老师(男)」「林老师(女·裙装)」3 套跨职业角色可直接切换体验！
+                </span>
+              </div>
+
+              <details class="prompt-guide-box">
+                <summary>如何把真人照片/任意职业变成最佳绑定效果？（附 AI 换人 Prompt 模板）</summary>
+                <div class="prompt-guide-body">
+                  <p>
+                    只需先用任意绘图工具（如豆包、即梦、Midjourney、GPT-4o、Nano Banana）将真人照片或职业描述转成<strong>正面站立、双手自然微张不贴大腿（A-Pose）、双脚分开</strong>的全身卡通立绘，再上传至此处即可一键驱动：
+                  </p>
+                  <div class="prompt-copy-row">
+                    <code id="apose-prompt-code">全身正面卡通人物立绘，[填写人物：如温柔女医生穿白大褂 / 年轻男程序员穿卫衣牛仔裤]，标准 A-Pose 站姿，双臂向身体两侧自然微张约20度（手与躯干大腿之间留出清晰空隙），双腿自然微开站立，完整显示头顶与双脚鞋子，正视前方，自然微笑，干净浅色纯白背景，清晰动漫线稿与赛璐璐上色，无阴影杂物遮挡</code>
+                    <button id="btn-copy-prompt" type="button" class="btn btn-secondary">
+                      复制模板
+                    </button>
+                  </div>
+                </div>
+              </details>
+            </div>
+
+            <div class="control-group">
+              <div class="group-header">
+                <h2>当前角色 6 层骨骼拆解预览</h2>
+                <div class="rig-meta-badges">
+                  <span id="rig-badge-outfit" class="badge-pill">裤装模式</span>
+                  <span id="rig-badge-glasses" class="badge-pill badge-teal" hidden>眼镜框保护已启用</span>
+                </div>
+              </div>
+              <div id="rig-layers-grid" class="rig-layers-grid"></div>
+            </div>
+
+            <div class="control-group">
+              <div class="group-header">
+                <h2>关节可视化校准、重切分与导出</h2>
+                <button id="btn-workshop-toggle-cal" type="button" class="link-btn">
+                  开启舞台关节拖拽校准
+                </button>
+              </div>
+              <p class="helper-copy">
+                若个别特殊发型/服饰的肩轴、髋轴或眼嘴位置有偏差，可开启舞台校准直接拖动关节点：点「仅保存轴心」立即生效；点「按校准重切分」会重新运行服务端胶囊分割与表情合成。
+              </p>
+              <div class="rig-manage-row">
+                <button id="btn-workshop-save-lm" type="button" class="btn btn-outline">
+                  仅保存关节轴心
+                </button>
+                <button id="btn-workshop-rerig" type="button" class="btn btn-secondary">
+                  按校准点重新切分 6 图层
+                </button>
+                <button id="btn-workshop-export" type="button" class="btn btn-outline">
+                  导出角色包 (.zip)
+                </button>
+                <button id="btn-workshop-delete" type="button" class="btn btn-danger-ghost" hidden>
+                  删除此自定义角色
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 3: Speech & Real-Time Lip-Sync -->
+          <div id="tab-pane-speech" class="tab-pane" role="tabpanel" hidden>
+            <div class="control-group">
+              <div class="group-header">
+                <h2>文字驱动说话 (TTS 实时口型)</h2>
+              </div>
+
+              <div class="preset-chips">
+                <button
+                  id="preset-line-1"
+                  type="button"
+                  class="chip-btn"
+                  data-text="大家好！现在不管换上男老师、女老师还是你上传的新角色，我都能自然眨眼、说话和挥手啦！"
+                >
+                  通用角色介绍
+                </button>
+                <button
+                  id="preset-line-2"
+                  type="button"
+                  class="chip-btn"
+                  data-text="同学们好，今天我们一起来学习新课程，有问题随时举手提问哦！"
+                >
+                  老师讲课台词
+                </button>
+                <button
+                  id="preset-line-3"
+                  type="button"
+                  class="chip-btn"
+                  data-text="Hello everyone! Upload any A-pose cartoon character and control all gestures in JavaScript!"
+                >
+                  英文台词
+                </button>
+              </div>
+
+              <textarea
+                id="input-speech-text"
+                class="speech-textarea"
+                rows="3"
+                placeholder="输入想让卡通角色说的话..."
+              >大家好！现在不管换上男老师、女老师还是你上传的新角色，我都能自然眨眼、说话和挥手啦！</textarea>
+
+              <div class="speech-controls-row">
+                <select id="select-speech-mode" class="mode-select" aria-label="语音合成模式">
+                  <option value="browser">浏览器自然人声 (推荐实时发声)</option>
+                  <option value="synth">卡通元音合成器 (Web Audio 频谱口型)</option>
+                  <option value="edge">Edge 神经语音 (本地联网环境)</option>
+                </select>
+                <button id="btn-speak" type="button" class="btn btn-primary">开口说话</button>
+                <button id="btn-stop-speak" type="button" class="btn btn-ghost">停止</button>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <div class="group-header">
+                <h2>麦克风与外部音频实时对口型</h2>
+              </div>
+              <p class="helper-copy">
+                开启麦克风后对着电脑说话，或上传任意配音音频（MP3/WAV），Web Audio 频谱解算器会实时分析音量与共振峰驱动角色变换 A / O / E 口型。
+              </p>
+              <div class="mic-audio-row">
+                <button id="btn-mic-toggle" type="button" class="btn btn-outline">
+                  开启麦克风实时跟读
+                </button>
+                <label id="btn-audio-upload-label" class="btn btn-secondary" for="input-audio-file">
+                  上传配音文件
+                </label>
+                <input id="input-audio-file" type="file" accept="audio/*" hidden />
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 4: Programmable JS SDK Console -->
+          <div id="tab-pane-code" class="tab-pane" role="tabpanel" hidden>
+            <div class="control-group">
+              <div class="group-header">
+                <h2>实时 JS 动作编排脚本 (`avatar.*`)</h2>
+                <div class="script-presets">
+                  <button id="script-tpl-1" type="button" class="link-btn">演出序列</button>
+                  <button id="script-tpl-2" type="button" class="link-btn">角色切换秀</button>
+                  <button id="script-tpl-3" type="button" class="link-btn">自定义关节</button>
+                </div>
+              </div>
+
+              <textarea id="code-editor" class="code-editor" rows="10" spellcheck="false">// 可直接使用全局 `avatar` 实例编排任意角色的全身与四肢动作序列：
+await Promise.all([
+  avatar.wave({ hand: 'right', times: 3 }),
+  avatar.speak('嗨！切换不同职业角色后，同一套 JS 代码可以直接复用！'),
+]);
+await avatar.walk({ steps: 4 });
+await avatar.kick({ leg: 'right' });
+await Promise.all([
+  avatar.jump({ height: 140 }),
+  avatar.laugh({ duration: 1500 }),
+]);
+await avatar.cheer({ times: 3 });</textarea>
+
+              <div class="code-actions-row">
+                <button id="btn-run-script" type="button" class="btn btn-primary">
+                  运行编排代码
+                </button>
+                <span id="script-run-status" class="script-status">就绪</span>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <div class="group-header">
+                <h2>API 调用日志</h2>
+                <button id="btn-clear-log" type="button" class="link-btn">清空</button>
+              </div>
+              <pre id="api-log-box" class="api-log-box">// 点击左侧动作按钮、切换角色或运行脚本时，此处实时记录 SDK 调用</pre>
+            </div>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

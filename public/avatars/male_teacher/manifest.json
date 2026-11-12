@@ -1,0 +1,181 @@
+{
+  "version": "1.2.0",
+  "id": "male_teacher",
+  "name": "陈老师 (男教师 · 裤装)",
+  "outfitMode": "pants",
+  "hasGlasses": true,
+  "canvasSize": {
+    "width": 896,
+    "height": 1200
+  },
+  "characterBounds": {
+    "x": 227,
+    "y": 62,
+    "width": 442,
+    "height": 1104
+  },
+  "layers": {
+    "head": {
+      "texture": "head.png",
+      "x": 362,
+      "y": 48,
+      "width": 172,
+      "height": 213,
+      "meshCols": 16,
+      "meshRows": 16
+    },
+    "body": {
+      "texture": "body.png",
+      "x": 213,
+      "y": 174,
+      "width": 471,
+      "height": 1007,
+      "meshCols": 12,
+      "meshRows": 20
+    },
+    "torso": {
+      "texture": "torso.png",
+      "x": 294,
+      "y": 180,
+      "width": 306,
+      "height": 507,
+      "meshCols": 12,
+      "meshRows": 16
+    },
+    "leftArm": {
+      "texture": "left_arm.png",
+      "x": 219,
+      "y": 307,
+      "width": 134,
+      "height": 416,
+      "meshCols": 10,
+      "meshRows": 22
+    },
+    "rightArm": {
+      "texture": "right_arm.png",
+      "x": 543,
+      "y": 304,
+      "width": 135,
+      "height": 420,
+      "meshCols": 10,
+      "meshRows": 22
+    },
+    "leftLeg": {
+      "texture": "left_leg.png",
+      "x": 280,
+      "y": 575,
+      "width": 174,
+      "height": 600,
+      "meshCols": 10,
+      "meshRows": 22
+    },
+    "rightLeg": {
+      "texture": "right_leg.png",
+      "x": 443,
+      "y": 575,
+      "width": 173,
+      "height": 600,
+      "meshCols": 10,
+      "meshRows": 22
+    }
+  },
+  "patches": {
+    "eyes_closed": "patches/eyes_closed.png",
+    "eyes_happy": "patches/eyes_happy.png",
+    "mouth_smile": "patches/mouth_smile.png",
+    "mouth_laugh": "patches/mouth_laugh.png",
+    "mouth_a": "patches/mouth_a.png",
+    "mouth_o": "patches/mouth_o.png",
+    "mouth_e": "patches/mouth_e.png"
+  },
+  "landmarks": {
+    "headCenter": [
+      448.0,
+      174.5
+    ],
+    "leftEye": [
+      421.5,
+      163.5
+    ],
+    "rightEye": [
+      473.2,
+      163.5
+    ],
+    "nose": [
+      448.0,
+      188.5
+    ],
+    "mouth": [
+      447.0,
+      209.0
+    ],
+    "neckPivot": [
+      447.5,
+      242.0
+    ],
+    "chest": [
+      447.5,
+      400.6
+    ],
+    "hips": [
+      447.5,
+      638.0
+    ],
+    "knees": [
+      447.5,
+      880.9
+    ],
+    "feetGround": [
+      447.5,
+      1160.0
+    ],
+    "leftShoulder": [
+      313.7,
+      343.8
+    ],
+    "leftElbow": [
+      288.0,
+      502.6
+    ],
+    "leftWrist": [
+      256.0,
+      623.4
+    ],
+    "rightShoulder": [
+      581.3,
+      340.8
+    ],
+    "rightElbow": [
+      607.0,
+      501.0
+    ],
+    "rightWrist": [
+      639.0,
+      622.8
+    ],
+    "leftHip": [
+      390.0,
+      638.0
+    ],
+    "leftKnee": [
+      378.0,
+      880.9
+    ],
+    "leftAnkle": [
+      364.5,
+      1068.1
+    ],
+    "rightHip": [
+      505.5,
+      638.0
+    ],
+    "rightKnee": [
+      518.0,
+      880.9
+    ],
+    "rightAnkle": [
+      531.0,
+      1068.1
+    ]
+  }
+}
